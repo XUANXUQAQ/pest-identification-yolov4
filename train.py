@@ -1,6 +1,7 @@
 # -------------------------------------#
 #       对数据集进行训练
 # -------------------------------------#
+import os
 
 import numpy as np
 import torch
@@ -185,13 +186,16 @@ if __name__ == "__main__":
     # ------------------------------------------------------#
     model_path = "model_data/yolo4_weights.pth"
     print('Loading weights into state dict...')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_dict = model.state_dict()
-    pretrained_dict = torch.load(model_path, map_location=device)
-    pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) == np.shape(v)}
-    model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)
-    print('Finished!')
+    if os.path.exists(model_path):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model_dict = model.state_dict()
+        pretrained_dict = torch.load(model_path, map_location=device)
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) == np.shape(v)}
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+        print('Finished!')
+    else:
+        print("error no pretrained model path")
 
     net = model.train()
 
