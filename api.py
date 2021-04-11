@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify, request
 import predict
 import utils.sha1_utils as sha1
+import json
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'img'
@@ -10,7 +11,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 basedir = os.path.abspath(os.path.dirname(__file__))
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'}
 
-pictures = {}
+CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
+CACHE_DATA_NAME = "data.json"
+
+pictures = []
 
 
 def allowed_files(filename):
@@ -23,13 +27,36 @@ def allowed_files(filename):
 def save_index(img_path, statistics) -> bool:
     # todo 创建一个sha1索引，每次上传识别后的图片都进行索引保存，下次上传上来如果索引中已经有了该图片则直接返回信息
     sha1_str = sha1.sha1(img_path)
-    return False
+    if not os.path.exists(CACHE_DIR):
+        os.mkdir(CACHE_DIR)
+    file_dir = os.path.join(CACHE_DIR, sha1_str)
+    if not os.path.exists(file_dir):
+        os.mkdir(file_dir)
+    json_file = json.dumps(statistics)
+    try:
+        with open(os.path.join(file_dir, CACHE_DATA_NAME), "wb") as f:
+            f.write(json_file.encode("utf-8"))
+            return True
+    except:
+        return False
 
 
 def load_index(img_path) -> dict:
     # todo 返回statistics
     sha1_str = sha1.sha1(img_path)
-    return None
+    file_dir = os.path.join(CACHE_DIR, sha1_str)
+    file_dir = os.path.join(file_dir, CACHE_DATA_NAME)
+    if os.path.exists(file_dir):
+        try:
+            with open(file_dir, "rb") as f:
+                strs = f.read()
+                dict_data = json.loads(strs)
+                print("已找到缓存")
+                return dict_data
+        except:
+            return {}
+    else:
+        return {}
 
 
 @app.route('/upload_photo', methods=['POST'], strict_slashes=False)
@@ -43,18 +70,28 @@ def api_upload():
     if f and allowed_files(f.filename):
         path = os.path.join(file_dir, f.filename)
         f.save(path)
-        pictures[path] = None
+        pictures.append(path)
         return jsonify({"success": 20000, "msg": "上传成功"})
     else:
-        return jsonify({"error": 40000, "msg": "上传失败"})
+        return jsonify({"error": 40001, "msg": "上传失败"})
 
 
 @app.route('/start_predict', methods=['POST'])
 def start_predict():
-    for each in pictures.keys():
-        each_statistics = predict.predict_img(each)
-        pictures[each] = each_statistics
-    return jsonify({"success": 20000, "statistics": pictures})
+    ret = {}
+    if not pictures:
+        print("还未上传文件")
+        return jsonify({"error": 40000, "msg": "未上传文件"})
+    for each in pictures:
+        each_statistics = load_index(each)
+        if not each_statistics:
+            each_statistics = predict.predict_img(each)
+            ret[os.path.basename(each)] = each_statistics
+            save_index(each, each_statistics)
+        else:
+            ret[os.path.basename(each)] = each_statistics
+    pictures.clear()
+    return jsonify({"success": 20000, "statistics": ret})
 
 
 if __name__ == '__main__':

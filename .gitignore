@@ -148,3 +148,4 @@ VOCdevkit/VOC2007/JPEGImages
 logs/
 model_data/yolo4_weights.pth
 .vscode
+cache/
