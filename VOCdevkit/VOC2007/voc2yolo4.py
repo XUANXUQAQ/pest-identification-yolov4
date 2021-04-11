@@ -22,7 +22,7 @@ saveBasePath = r"ImageSets\Main"
 #   想要增加测试集修改trainval_percent
 #   train_percent不需要修改
 # ----------------------------------------------------------------------#
-trainval_percent = 1
+trainval_percent = 0.9
 train_percent = 1
 
 current_path = os.path.abspath(__file__)
@@ -36,11 +36,11 @@ for xml in temp_xml:
     if xml.endswith(".xml"):
         total_xml.append(xml)
 
-num = len(total_xml)
-list = range(num)
-tv = int(num * trainval_percent)
+xml_num = len(total_xml)
+lists = range(xml_num)
+tv = int(xml_num * trainval_percent)
 tr = int(tv * train_percent)
-trainval = random.sample(list, tv)
+trainval = random.sample(lists, tv)
 train = random.sample(trainval, tr)
 
 print("train and val size", tv)
@@ -50,7 +50,7 @@ ftest = open(os.path.join(saveBasePath, 'test.txt'), 'w')
 ftrain = open(os.path.join(saveBasePath, 'train.txt'), 'w')
 fval = open(os.path.join(saveBasePath, 'val.txt'), 'w')
 
-for i in list:
+for i in lists:
     name = total_xml[i][:-4] + '\n'
     if i in trainval:
         ftrainval.write(name)
