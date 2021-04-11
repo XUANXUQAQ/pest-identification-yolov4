@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, jsonify, request
 import predict
+import utils.sha1_utils as sha1
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'img'
@@ -17,6 +18,18 @@ def allowed_files(filename):
         return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
     except:
         return False
+
+
+def save_index(img_path, statistics) -> bool:
+    # todo 创建一个sha1索引，每次上传识别后的图片都进行索引保存，下次上传上来如果索引中已经有了该图片则直接返回信息
+    sha1_str = sha1.sha1(img_path)
+    return False
+
+
+def load_index(img_path) -> dict:
+    # todo 返回statistics
+    sha1_str = sha1.sha1(img_path)
+    return None
 
 
 @app.route('/upload_photo', methods=['POST'], strict_slashes=False)
