@@ -1,17 +1,10 @@
-from random import shuffle
-import numpy as np
-import torch
-import torch.nn as nn
-import math
-import torch.nn.functional as F
-from PIL import Image
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from torch.utils.data.dataset import Dataset
-from utils.utils import bbox_iou, merge_bboxes
-from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
-from nets.yolo_training import Generator
 import cv2
+import numpy as np
+from PIL import Image
+from torch.utils.data.dataset import Dataset
+
+from utils.utils import merge_bboxes
+
 
 class YoloDataset(Dataset):
     def __init__(self, train_lines, image_size, mosaic=True, is_train=True):
@@ -39,14 +32,14 @@ class YoloDataset(Dataset):
         box = np.array([np.array(list(map(int, box.split(',')))) for box in line[1:]])
 
         if not random:
-            scale = min(w/iw, h/ih)
-            nw = int(iw*scale)
-            nh = int(ih*scale)
-            dx = (w-nw)//2
-            dy = (h-nh)//2
+            scale = min(w / iw, h / ih)
+            nw = int(iw * scale)
+            nh = int(ih * scale)
+            dx = (w - nw) // 2
+            dy = (h - nh) // 2
 
-            image = image.resize((nw,nh), Image.BICUBIC)
-            new_image = Image.new('RGB', (w,h), (128,128,128))
+            image = image.resize((nw, nh), Image.BICUBIC)
+            new_image = Image.new('RGB', (w, h), (128, 128, 128))
             new_image.paste(image, (dx, dy))
             image_data = np.array(new_image, np.float32)
 
@@ -95,16 +88,16 @@ class YoloDataset(Dataset):
         hue = self.rand(-hue, hue)
         sat = self.rand(1, sat) if self.rand() < .5 else 1 / self.rand(1, sat)
         val = self.rand(1, val) if self.rand() < .5 else 1 / self.rand(1, val)
-        x = cv2.cvtColor(np.array(image,np.float32)/255, cv2.COLOR_RGB2HSV)
-        x[..., 0] += hue*360
-        x[..., 0][x[..., 0]>1] -= 1
-        x[..., 0][x[..., 0]<0] += 1
+        x = cv2.cvtColor(np.array(image, np.float32) / 255, cv2.COLOR_RGB2HSV)
+        x[..., 0] += hue * 360
+        x[..., 0][x[..., 0] > 1] -= 1
+        x[..., 0][x[..., 0] < 0] += 1
         x[..., 1] *= sat
         x[..., 2] *= val
-        x[x[:,:, 0]>360, 0] = 360
-        x[:, :, 1:][x[:, :, 1:]>1] = 1
-        x[x<0] = 0
-        image_data = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)*255
+        x[x[:, :, 0] > 360, 0] = 360
+        x[:, :, 1:][x[:, :, 1:] > 1] = 1
+        x[x < 0] = 0
+        image_data = cv2.cvtColor(x, cv2.COLOR_HSV2RGB) * 255
 
         # 调整目标框坐标
         box_data = np.zeros((len(box), 5))
@@ -170,16 +163,16 @@ class YoloDataset(Dataset):
             hue = self.rand(-hue, hue)
             sat = self.rand(1, sat) if self.rand() < .5 else 1 / self.rand(1, sat)
             val = self.rand(1, val) if self.rand() < .5 else 1 / self.rand(1, val)
-            x = cv2.cvtColor(np.array(image,np.float32)/255, cv2.COLOR_RGB2HSV)
-            x[..., 0] += hue*360
-            x[..., 0][x[..., 0]>1] -= 1
-            x[..., 0][x[..., 0]<0] += 1
+            x = cv2.cvtColor(np.array(image, np.float32) / 255, cv2.COLOR_RGB2HSV)
+            x[..., 0] += hue * 360
+            x[..., 0][x[..., 0] > 1] -= 1
+            x[..., 0][x[..., 0] < 0] += 1
             x[..., 1] *= sat
             x[..., 2] *= val
-            x[x[:,:, 0]>360, 0] = 360
-            x[:, :, 1:][x[:, :, 1:]>1] = 1
-            x[x<0] = 0
-            image = cv2.cvtColor(x, cv2.COLOR_HSV2RGB) # numpy array, 0 to 1
+            x[x[:, :, 0] > 360, 0] = 360
+            x[:, :, 1:][x[:, :, 1:] > 1] = 1
+            x[x < 0] = 0
+            image = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)  # numpy array, 0 to 1
 
             image = Image.fromarray((image * 255).astype(np.uint8))
             # 将图片进行放置，分别对应四张分割图片的位置
@@ -233,7 +226,7 @@ class YoloDataset(Dataset):
                 img, y = self.get_random_data_with_Mosaic(lines[index:index + 4], self.image_size[0:2])
             else:
                 img, y = self.get_random_data(lines[index], self.image_size[0:2], random=self.is_train)
-            self.flag = bool(1-self.flag)
+            self.flag = bool(1 - self.flag)
         else:
             img, y = self.get_random_data(lines[index], self.image_size[0:2], random=self.is_train)
 
@@ -269,4 +262,3 @@ def yolo_dataset_collate(batch):
         bboxes.append(box)
     images = np.array(images)
     return images, bboxes
-
