@@ -195,7 +195,7 @@ if __name__ == "__main__":
         model.load_state_dict(model_dict)
         print('Finished!')
     else:
-        print("error no pretrained model path")
+        print("error no pretrained model")
 
     net = model.train()
 
