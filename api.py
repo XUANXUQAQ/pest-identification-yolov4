@@ -25,7 +25,6 @@ def allowed_files(filename):
 
 
 def save_index(img_path, statistics) -> bool:
-    # todo 创建一个sha1索引，每次上传识别后的图片都进行索引保存，下次上传上来如果索引中已经有了该图片则直接返回信息
     sha1_str = sha1.sha1(img_path)
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
@@ -42,7 +41,6 @@ def save_index(img_path, statistics) -> bool:
 
 
 def load_index(img_path) -> dict:
-    # todo 返回statistics
     sha1_str = sha1.sha1(img_path)
     file_dir = os.path.join(CACHE_DIR, sha1_str)
     file_dir = os.path.join(file_dir, CACHE_DATA_NAME)
