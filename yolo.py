@@ -115,7 +115,7 @@ class YOLO(object):
     # ---------------------------------------------------#
     #   检测图片
     # ---------------------------------------------------#
-    def detect_image(self, image) -> (str, Image):
+    def detect_image(self, image):
         image_shape = np.array(np.shape(image)[0:2])
 
         # ---------------------------------------------------------#
@@ -193,7 +193,10 @@ class YOLO(object):
 
         thickness = max((np.shape(image)[0] + np.shape(image)[1]) // self.model_image_size[0], 1)
 
-        predicted_class = ""
+        statistics = {}
+        for each_class in self.class_names:
+            statistics[each_class] = 0
+
         for i, c in enumerate(top_label):
             predicted_class = self.class_names[c]
             score = top_conf[i]
@@ -208,6 +211,12 @@ class YOLO(object):
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(np.shape(image)[0], np.floor(bottom + 0.5).astype('int32'))
             right = min(np.shape(image)[1], np.floor(right + 0.5).astype('int32'))
+
+            # 对每个类型进行计数
+            count = statistics[predicted_class]
+            if count is not None:
+                count += 1
+                statistics[predicted_class] = count
 
             # 画框框
             label = '{} {:.2f}'.format(predicted_class, score)
@@ -230,4 +239,4 @@ class YOLO(object):
                 fill=self.colors[self.class_names.index(predicted_class)])
             draw.text(text_origin, str(label, 'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
-        return predicted_class, image
+        return statistics, image
