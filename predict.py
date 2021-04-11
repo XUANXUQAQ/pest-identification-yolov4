@@ -23,5 +23,6 @@ while True:
         print('Open Error! Try again!')
         continue
     else:
-        r_image = yolo.detect_image(image)
+        class_name, r_image = yolo.detect_image(image)
+        print("class: " + class_name)
         r_image.show()

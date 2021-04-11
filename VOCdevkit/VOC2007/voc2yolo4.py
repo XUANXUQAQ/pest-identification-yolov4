@@ -15,8 +15,8 @@ import random
 
 random.seed(0)
 
-xmlfilepath = r'D:\Code\Lab\林业害虫识别\识别神经网络\yolov4-pytorch\VOCdevkit\VOC2007\Annotations'
-saveBasePath = r"D:\Code\Lab\林业害虫识别\识别神经网络\yolov4-pytorch\VOCdevkit\VOC2007\ImageSets\Main"
+xmlfilepath = r'Annotations'
+saveBasePath = r"ImageSets\Main"
 
 # ----------------------------------------------------------------------#
 #   想要增加测试集修改trainval_percent
@@ -25,7 +25,12 @@ saveBasePath = r"D:\Code\Lab\林业害虫识别\识别神经网络\yolov4-pytorc
 trainval_percent = 1
 train_percent = 1
 
-temp_xml = os.listdir(xmlfilepath)
+current_path = os.path.abspath(__file__)
+father_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
+
+saveBasePath = os.path.join(father_path, saveBasePath)
+
+temp_xml = os.listdir(os.path.join(father_path, xmlfilepath))
 total_xml = []
 for xml in temp_xml:
     if xml.endswith(".xml"):

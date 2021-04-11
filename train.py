@@ -155,7 +155,7 @@ if __name__ == "__main__":
     #   训练前一定要修改classes_path，使其对应自己的数据集
     # ----------------------------------------------------#
     anchors_path = 'model_data/yolo_anchors.txt'
-    classes_path = 'model_data/voc_classes.txt'
+    classes_path = 'model_data/all_classes.txt'
     # ----------------------------------------------------#
     #   获取classes和anchor
     # ----------------------------------------------------#

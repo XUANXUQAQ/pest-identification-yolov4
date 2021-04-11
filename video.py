@@ -28,7 +28,7 @@ while True:
     # 转变成Image
     frame = Image.fromarray(np.uint8(frame))
     # 进行检测
-    frame = np.array(yolo.detect_image(frame))
+    frame = np.array(yolo.detect_image(frame)[1])
     # RGBtoBGR满足opencv显示格式
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 

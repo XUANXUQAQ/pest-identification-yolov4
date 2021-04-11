@@ -24,7 +24,7 @@ class YOLO(object):
     _defaults = {
         "model_path": 'model_data/yolo4_weights.pth',
         "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path": 'model_data/voc_classes.txt',
+        "classes_path": 'model_data/all_classes.txt',
         "model_image_size": (416, 416, 3),
         "confidence": 0.5,
         "iou": 0.3,
@@ -115,7 +115,7 @@ class YOLO(object):
     # ---------------------------------------------------#
     #   检测图片
     # ---------------------------------------------------#
-    def detect_image(self, image):
+    def detect_image(self, image) -> (str, Image):
         image_shape = np.array(np.shape(image)[0:2])
 
         # ---------------------------------------------------------#
@@ -161,7 +161,7 @@ class YOLO(object):
             try:
                 batch_detections = batch_detections[0].cpu().numpy()
             except:
-                return image
+                return "error", image
 
             # ---------------------------------------------------------#
             #   对预测框进行得分筛选
@@ -193,6 +193,7 @@ class YOLO(object):
 
         thickness = max((np.shape(image)[0] + np.shape(image)[1]) // self.model_image_size[0], 1)
 
+        predicted_class = ""
         for i, c in enumerate(top_label):
             predicted_class = self.class_names[c]
             score = top_conf[i]
@@ -229,4 +230,4 @@ class YOLO(object):
                 fill=self.colors[self.class_names.index(predicted_class)])
             draw.text(text_origin, str(label, 'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
-        return image
+        return predicted_class, image
