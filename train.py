@@ -122,7 +122,7 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
 
     print('Saving state, iter:', str(epoch + 1))
     torch.save(model.state_dict(), 'logs/Epoch%d-Total_Loss%.4f-Val_Loss%.4f.pth' % (
-        (epoch + 1), total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1)))
+        (epoch + 1) % 100, total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1)))
 
 
 # ----------------------------------------------------#
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------#
     mosaic = False
     Cosine_lr = False
-    smoooth_label = 0
+    smooth_label = 0
 
     # ------------------------------------------------------#
     #   创建yolo模型
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     yolo_losses = []
     for i in range(3):
         yolo_losses.append(YOLOLoss(np.reshape(anchors, [-1, 2]), num_classes,
-                                    (input_shape[1], input_shape[0]), smoooth_label, Cuda, normalize))
+                                    (input_shape[1], input_shape[0]), smooth_label, Cuda, normalize))
 
     # ----------------------------------------------------#
     #   获得图片路径和标签
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     #   也可以在训练初期防止权值被破坏。
     #   Init_Epoch为起始世代
     #   Freeze_Epoch为冻结训练的世代
-    #   Epoch总训练世代
+    #   Unfreeze_Epoch为解冻训练的世代
     #   提示OOM或者显存不足请调小Batch_size
     # ------------------------------------------------------#
     Init_Epoch = 0
