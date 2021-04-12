@@ -236,11 +236,12 @@ if __name__ == "__main__":
     #   Epoch总训练世代
     #   提示OOM或者显存不足请调小Batch_size
     # ------------------------------------------------------#
+    Init_Epoch = 0
+    Freeze_Epoch = 200
+    Unfreeze_Epoch = 600
     if True:
         lr = 1e-3
         Batch_size = 4
-        Init_Epoch = 0
-        Freeze_Epoch = 50
 
         # ----------------------------------------------------------------------------#
         #   我在实际测试时，发现optimizer的weight_decay起到了反作用，
@@ -281,8 +282,6 @@ if __name__ == "__main__":
     if True:
         lr = 1e-4
         Batch_size = 2
-        Freeze_Epoch = 50
-        Unfreeze_Epoch = 100
 
         # ----------------------------------------------------------------------------#
         #   我在实际测试时，发现optimizer的weight_decay起到了反作用，

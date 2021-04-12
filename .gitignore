@@ -149,3 +149,6 @@ logs/
 model_data/yolo4_weights.pth
 .vscode
 cache/
+
+results/
+input/

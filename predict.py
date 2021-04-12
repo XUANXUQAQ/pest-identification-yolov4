@@ -30,7 +30,7 @@ def predict_img(image_path):
         return classes_statistics
     except:
         print('Open File Error!')
-        return {"Error": "Open File Error!"}
+        return {"error": "Open File Error!"}
 
 
 if __name__ == '__main__':

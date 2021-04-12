@@ -12,8 +12,9 @@ classes = []
 with open("model_data/all_classes.txt", "r") as f:
     line = f.readline().replace('\n', '')
     while line:
-        classes.append(line)
-        line = f.readline().replace('\n', '')
+        if not line.isspace():
+            classes.append(line)
+            line = f.readline().replace('\n', '')
 
 
 def convert_annotation(year, image_id, list_file):

@@ -15,6 +15,8 @@ CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_DATA_NAME = "data.json"
 
 pictures = []
+index_count = len(os.listdir('cache'))
+MAX_INDEX_NUM = 10000
 
 
 def allowed_files(filename):
@@ -25,6 +27,9 @@ def allowed_files(filename):
 
 
 def save_index(img_path, statistics) -> bool:
+    if index_count > MAX_INDEX_NUM:
+        print("缓存大小超出限制")
+        return False
     sha1_str = sha1.sha1(img_path)
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
@@ -85,7 +90,8 @@ def start_predict():
         if not each_statistics:
             each_statistics = predict.predict_img(each)
             ret[os.path.basename(each)] = each_statistics
-            save_index(each, each_statistics)
+            if not each_statistics["error"]:
+                save_index(each, each_statistics)
         else:
             ret[os.path.basename(each)] = each_statistics
     pictures.clear()
