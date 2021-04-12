@@ -140,9 +140,6 @@ dmypy.json
 cython_debug/
 
 .idea/
-VOCdevkit/VOC2007/Annotations/
-VOCdevkit/VOC2007/ImageSets
-VOCdevkit/VOC2007/JPEGImages
 
 2007_*.txt
 logs/
