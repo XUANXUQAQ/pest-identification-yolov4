@@ -170,7 +170,7 @@ class CSPDarkNet(nn.Module):
         return out3, out4, out5
 
 
-def darknet53(pretrained, **kwargs):
+def darknet53(pretrained):
     model = CSPDarkNet([1, 2, 8, 8, 4])
     if pretrained:
         if isinstance(pretrained, str):
