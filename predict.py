@@ -28,11 +28,17 @@ def predict_img(image_path):
         classes_statistics, r_image = yolo.detect_image(image)
         r_image.save(processed_name)
         return classes_statistics
-    except:
+    except Exception as e:
         print('Open File Error!')
+        print(e)
         return {"error": "Open File Error!"}
 
 
+def update_model():
+    global yolo
+    yolo = YOLO()
+
+
 if __name__ == '__main__':
-    statistics = predict_img(r'img/street.jpg')
+    statistics = predict_img(r'D:\System Folders\Pictures\Saved Pictures\3.jpg')
     print(statistics)

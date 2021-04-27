@@ -15,13 +15,52 @@ from nets.yolo4 import YoloBody
 from nets.yolo_training import Generator, YOLOLoss
 from utils.dataloader import YoloDataset, yolo_dataset_collate
 
+model: YoloBody
+optimizer: optim.Adam
+stop_train_flag = False
+total_loss = 0
+__total_loss = 100
+__iterationCount = 1
+
+# -------------------------------#
+#   是否使用Cuda
+#   没有GPU可以设置成False
+# -------------------------------#
+Cuda = True
+# -------------------------------#
+#   Dataloder的使用
+# -------------------------------#
+Use_Data_Loader = True
+# ------------------------------------------------------#
+#   是否对损失进行归一化，用于改变loss的大小
+#   用于决定计算最终loss是除上batch_size还是除上正样本数量
+# ------------------------------------------------------#
+normalize = False
+# -------------------------------#
+#   输入的shape大小
+#   显存比较小可以使用416x416
+#   显存比较大可以使用608x608
+# -------------------------------#
+input_shape = (608, 608)
+
+# ------------------------------------------------------#
+#   Yolov4的tricks应用
+#   mosaic 马赛克数据增强 True or False
+#   实际测试时mosaic数据增强并不稳定，所以默认为False
+#   Cosine_scheduler 余弦退火学习率 True or False
+#   label_smoothing 标签平滑 0.01以下一般 如0.01、0.005
+# ------------------------------------------------------#
+mosaic = False
+Cosine_lr = False
+smooth_label = 0.005
+
 
 # ---------------------------------------------------#
 #   获得类和先验框
 # ---------------------------------------------------#
 def get_classes(classes_path):
     """loads the classes"""
-    with open(classes_path) as f:
+    with open(classes_path, encoding='utf-8') as f:
         class_names = f.readlines()
     class_names = [c.strip() for c in class_names]
     return class_names
@@ -29,7 +68,7 @@ def get_classes(classes_path):
 
 def get_anchors(anchors_path):
     """loads the anchors from a file"""
-    with open(anchors_path) as f:
+    with open(anchors_path, encoding='utf-8') as f:
         anchors = f.readline()
     anchors = [float(x) for x in anchors.split(',')]
     return np.array(anchors).reshape([-1, 3, 2])[::-1, :, :]
@@ -41,13 +80,15 @@ def get_lr(optimizer):
 
 
 def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genval, Epoch, cuda):
-    total_loss = 0
+    global total_loss, __iterationCount
     val_loss = 0
 
     net.train()
     with tqdm(total=epoch_size, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3) as pbar:
         for iteration, batch in enumerate(gen):
             if iteration >= epoch_size:
+                if stop_train_flag:
+                    return
                 break
             images, targets = batch[0], batch[1]
             with torch.no_grad():
@@ -84,8 +125,10 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
             optimizer.step()
 
             total_loss += loss.item()
+            global __total_loss
+            __total_loss = total_loss / (iteration + 1)
 
-            pbar.set_postfix(**{'total_loss': total_loss / (iteration + 1),
+            pbar.set_postfix(**{'total_loss': __total_loss,
                                 'lr': get_lr(optimizer)})
             pbar.update(1)
 
@@ -94,6 +137,8 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
     with tqdm(total=epoch_size_val, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3) as pbar:
         for iteration, batch in enumerate(genval):
             if iteration >= epoch_size_val:
+                if stop_train_flag:
+                    return
                 break
             images_val, targets_val = batch[0], batch[1]
 
@@ -121,35 +166,34 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
     print('Total Loss: %.4f || Val Loss: %.4f ' % (total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1)))
 
     print('Saving state, iter:', str(epoch + 1))
-    torch.save(model.state_dict(), 'logs/Epoch%d-Total_Loss%.4f-Val_Loss%.4f.pth' % (
-        (epoch + 1) % 100, total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1)))
+    __iterationCount += 1
+    log = 'Epoch:%d----Total loss:%.4f----Val loss:%.4f----file_name:Epoch%d.pth' % \
+          ((epoch + 1), total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1), ((epoch + 1) % 100))
+    with open('logs/epoch-status.log', 'a', encoding='utf-8') as log_file:
+        log_file.write(log)
+        log_file.write('\n')
+    torch.save(model.state_dict(), 'logs/Epoch%d.pth' % ((epoch + 1) % 100))
 
 
-# ----------------------------------------------------#
-#   检测精度mAP和pr曲线计算参考视频
-#   https://www.bilibili.com/video/BV1zE411u7Vw
-# ----------------------------------------------------#
-if __name__ == "__main__":
-    # -------------------------------#
-    #   是否使用Cuda
-    #   没有GPU可以设置成False
-    # -------------------------------#
-    Cuda = True
-    # -------------------------------#
-    #   Dataloder的使用
-    # -------------------------------#
-    Use_Data_Loader = True
-    # ------------------------------------------------------#
-    #   是否对损失进行归一化，用于改变loss的大小
-    #   用于决定计算最终loss是除上batch_size还是除上正样本数量
-    # ------------------------------------------------------#
-    normalize = False
-    # -------------------------------#
-    #   输入的shape大小
-    #   显存比较小可以使用416x416
-    #   显存比较大可以使用608x608
-    # -------------------------------#
-    input_shape = (416, 416)
+def get_loss():
+    global __total_loss
+    return __total_loss
+
+
+def get_iteration():
+    global __iterationCount
+    return __iterationCount
+
+
+def stop_train():
+    global stop_train_flag
+    stop_train_flag = True
+
+
+def start_train():
+    global stop_train_flag, model, __iterationCount
+    stop_train_flag = False
+    __iterationCount = 1
 
     # ----------------------------------------------------#
     #   classes和anchor的路径，非常重要
@@ -165,17 +209,6 @@ if __name__ == "__main__":
     num_classes = len(class_names)
 
     # ------------------------------------------------------#
-    #   Yolov4的tricks应用
-    #   mosaic 马赛克数据增强 True or False 
-    #   实际测试时mosaic数据增强并不稳定，所以默认为False
-    #   Cosine_scheduler 余弦退火学习率 True or False
-    #   label_smoothing 标签平滑 0.01以下一般 如0.01、0.005
-    # ------------------------------------------------------#
-    mosaic = False
-    Cosine_lr = False
-    smooth_label = 0
-
-    # ------------------------------------------------------#
     #   创建yolo模型
     #   训练前一定要修改classes_path和对应的txt文件
     # ------------------------------------------------------#
@@ -186,8 +219,8 @@ if __name__ == "__main__":
     # ------------------------------------------------------#
     model_path = "model_data/yolo4_weights.pth"
     print('Loading weights into state dict...')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if os.path.exists(model_path):
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model_dict = model.state_dict()
         pretrained_dict = torch.load(model_path, map_location=device)
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) == np.shape(v)}
@@ -220,7 +253,7 @@ if __name__ == "__main__":
     #   当前划分方式下，验证集和训练集的比例为1:9
     # ----------------------------------------------------------------------#
     val_split = 0.1
-    with open(annotation_path) as f:
+    with open(annotation_path, encoding='utf-8') as f:
         lines = f.readlines()
     np.random.seed(10101)
     np.random.shuffle(lines)
@@ -238,7 +271,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------#
     Init_Epoch = 0
     Freeze_Epoch = 200
-    Unfreeze_Epoch = 600
+    Unfreeze_Epoch = 300
     if True:
         lr = 1e-3
         Batch_size = 4
@@ -247,6 +280,7 @@ if __name__ == "__main__":
         #   我在实际测试时，发现optimizer的weight_decay起到了反作用，
         #   所以去除掉了weight_decay，大家也可以开起来试试，一般是weight_decay=5e-4
         # ----------------------------------------------------------------------------#
+        global optimizer
         optimizer = optim.Adam(net.parameters(), lr)
         if Cosine_lr:
             lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-5)
@@ -276,6 +310,8 @@ if __name__ == "__main__":
             param.requires_grad = False
 
         for epoch in range(Init_Epoch, Freeze_Epoch):
+            if stop_train_flag:
+                return
             fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Freeze_Epoch, Cuda)
             lr_scheduler.step()
 
@@ -316,5 +352,11 @@ if __name__ == "__main__":
             param.requires_grad = True
 
         for epoch in range(Freeze_Epoch, Unfreeze_Epoch):
+            if stop_train_flag:
+                return
             fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Unfreeze_Epoch, Cuda)
             lr_scheduler.step()
+
+
+if __name__ == '__main__':
+    start_train()

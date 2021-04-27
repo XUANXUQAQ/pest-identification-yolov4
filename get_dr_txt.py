@@ -37,7 +37,7 @@ class mAP_Yolo(YOLO):
     def detect_image(self, image_id, image):
         self.confidence = 0.01
         self.iou = 0.5
-        f = open("./input/detection-results/" + image_id + ".txt", "w")
+        f = open("./input/detection-results/" + image_id + ".txt", "w", encoding='utf-8')
         image_shape = np.array(np.shape(image)[0:2])
 
         # ---------------------------------------------------------#
@@ -116,27 +116,28 @@ class mAP_Yolo(YOLO):
 
             top, left, bottom, right = boxes[i]
             f.write("%s %s %s %s %s %s\n" % (
-            predicted_class, score[:6], str(int(left)), str(int(top)), str(int(right)), str(int(bottom))))
+                predicted_class, score[:6], str(int(left)), str(int(top)), str(int(right)), str(int(bottom))))
 
         f.close()
         return
 
 
-yolo = mAP_Yolo()
-image_ids = open('VOCdevkit/VOC2007/ImageSets/Main/test.txt').read().strip().split()
+def get_dr_txt():
+    yolo = mAP_Yolo()
+    image_ids = open('VOCdevkit/VOC2007/ImageSets/Main/test.txt', encoding='utf-8').read().strip().split()
 
-if not os.path.exists("./input"):
-    os.makedirs("./input")
-if not os.path.exists("./input/detection-results"):
-    os.makedirs("./input/detection-results")
-if not os.path.exists("./input/images-optional"):
-    os.makedirs("./input/images-optional")
+    if not os.path.exists("./input"):
+        os.makedirs("./input")
+    if not os.path.exists("./input/detection-results"):
+        os.makedirs("./input/detection-results")
+    if not os.path.exists("./input/images-optional"):
+        os.makedirs("./input/images-optional")
 
-for image_id in tqdm(image_ids):
-    image_path = "./VOCdevkit/VOC2007/JPEGImages/" + image_id + ".jpg"
-    image = Image.open(image_path)
-    # 开启后在之后计算mAP可以可视化
-    # image.save("./input/images-optional/"+image_id+".jpg")
-    yolo.detect_image(image_id, image)
+    for image_id in tqdm(image_ids):
+        image_path = "./VOCdevkit/VOC2007/JPEGImages/" + image_id + ".jpg"
+        image = Image.open(image_path)
+        # 开启后在之后计算mAP可以可视化
+        # image.save("./input/images-optional/"+image_id+".jpg")
+        yolo.detect_image(image_id, image)
 
-print("Conversion completed!")
+    print("Conversion completed!")

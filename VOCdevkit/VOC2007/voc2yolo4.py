@@ -15,53 +15,60 @@ import random
 
 random.seed(0)
 
-xmlfilepath = r'Annotations'
-saveBasePath = r"ImageSets\Main"
-
 # ----------------------------------------------------------------------#
 #   想要增加测试集修改trainval_percent
 #   train_percent不需要修改
 # ----------------------------------------------------------------------#
-trainval_percent = 0.9
-train_percent = 1
+trainval_percent = 1
 
-current_path = os.path.abspath(__file__)
-father_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
 
-saveBasePath = os.path.join(father_path, saveBasePath)
+def voc2Yolo4():
+    xmlfilepath = r'Annotations'
+    saveBasePath = r"ImageSets/Main"
+    train_percent = 1
 
-temp_xml = os.listdir(os.path.join(father_path, xmlfilepath))
-total_xml = []
-for xml in temp_xml:
-    if xml.endswith(".xml"):
-        total_xml.append(xml)
+    current_path = os.path.abspath(__file__)
+    father_path = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
 
-xml_num = len(total_xml)
-lists = range(xml_num)
-tv = int(xml_num * trainval_percent)
-tr = int(tv * train_percent)
-trainval = random.sample(lists, tv)
-train = random.sample(trainval, tr)
+    saveBasePath = os.path.join(father_path, saveBasePath)
 
-print("train and val size", tv)
-print("train size", tr)
-ftrainval = open(os.path.join(saveBasePath, 'trainval.txt'), 'w')
-ftest = open(os.path.join(saveBasePath, 'test.txt'), 'w')
-ftrain = open(os.path.join(saveBasePath, 'train.txt'), 'w')
-fval = open(os.path.join(saveBasePath, 'val.txt'), 'w')
+    temp_xml = os.listdir(os.path.join(father_path, xmlfilepath))
+    total_xml = []
+    for xml in temp_xml:
+        if xml.endswith(".xml"):
+            total_xml.append(xml)
 
-for i in lists:
-    name = total_xml[i][:-4] + '\n'
-    if i in trainval:
-        ftrainval.write(name)
-        if i in train:
-            ftrain.write(name)
+    xml_num = len(total_xml)
+    lists = range(xml_num)
+    tv = int(xml_num * trainval_percent)
+    tr = int(tv * train_percent)
+    trainval = random.sample(lists, tv)
+    train = random.sample(trainval, tr)
+
+    print("train and val size", tv)
+    print("train size", tr)
+    ftrainval = open(os.path.join(saveBasePath, 'trainval.txt'), 'wb')
+    ftest = open(os.path.join(saveBasePath, 'test.txt'), 'wb')
+    ftrain = open(os.path.join(saveBasePath, 'train.txt'), 'wb')
+    fval = open(os.path.join(saveBasePath, 'val.txt'), 'wb')
+
+    for i in lists:
+        name = total_xml[i][:-4] + '\n'
+        if i in trainval:
+            ftrainval.write(name.encode('utf-8'))
+            if i in train:
+                ftrain.write(name.encode('utf-8'))
+            else:
+                fval.write(name.encode('utf-8'))
         else:
-            fval.write(name)
-    else:
-        ftest.write(name)
+            ftest.write(name.encode('utf-8'))
 
-ftrainval.close()
-ftrain.close()
-fval.close()
-ftest.close()
+    ftrainval.close()
+    ftrain.close()
+    fval.close()
+    ftest.close()
+
+
+def update_train_percent(train_percent):
+    global trainval_percent
+    trainval_percent = train_percent

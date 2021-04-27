@@ -160,7 +160,8 @@ class YOLO(object):
             # ---------------------------------------------------------#
             try:
                 batch_detections = batch_detections[0].cpu().numpy()
-            except:
+            except Exception as e:
+                print(e)
                 return "error", image
 
             # ---------------------------------------------------------#
@@ -217,7 +218,10 @@ class YOLO(object):
             if count is not None:
                 count += 1
                 statistics[predicted_class] = count
-
+            # 删除为零的类型
+            for each_key, each_val in statistics:
+                if (each_val is None) or (each_val == 0):
+                    statistics.pop(each_key)
             # 画框框
             label = '{} {:.2f}'.format(predicted_class, score)
             draw = ImageDraw.Draw(image)
