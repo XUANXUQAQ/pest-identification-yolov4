@@ -194,11 +194,22 @@ def confirm_add_train_data():
             unzip_file(full_path, file_dir)
         jpeg_dir = os.path.join(file_dir, 'JPEGImages')
         for each_file in os.listdir(jpeg_dir):
-            shutil.copy(os.path.join(jpeg_dir, each_file), os.path.join('VOCdevkit/VOC2007/JPEGImages', each_file))
+            copy_path = os.path.join('VOCdevkit/VOC2007/JPEGImages', each_file)
+            src_path = os.path.join(jpeg_dir, each_file)
+            if not os.path.exists(copy_path):
+                shutil.copy(src_path, copy_path)
+            else:
+                check.add_error_img(each_file)
+                shutil.copy(src_path, os.path.join('VOCdevkit/VOC2007/backup/jpg', each_file))
         annotation_dir = os.path.join(file_dir, 'Annotations')
         for each_file in os.listdir(annotation_dir):
-            shutil.copy(os.path.join(annotation_dir, each_file),
-                        os.path.join('VOCdevkit/VOC2007/Annotations', each_file))
+            copy_path = os.path.join('VOCdevkit/VOC2007/Annotations', each_file)
+            src_path = os.path.join(annotation_dir, each_file)
+            if not os.path.exists(copy_path):
+                shutil.copy(src_path, copy_path)
+            else:
+                check.add_error_xml(each_file)
+                shutil.copy(src_path, os.path.join('VOCdevkit/VOC2007/backup/xml', each_file))
         return resp_utils.success()
     except Exception as e:
         print(e)

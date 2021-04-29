@@ -65,7 +65,7 @@ def check():
     data_size = len([lists for lists in os.listdir(jpeg_dir) if os.path.isfile(os.path.join(jpeg_dir, lists))])
     recv_size = 0
     incompleteFile = 0
-    print('file tall : %d' % data_size)
+    print('jpg total : %d' % data_size)
 
     if not os.path.exists(backup_dir):
         os.mkdir(backup_dir)
@@ -109,3 +109,15 @@ def get_available_data_num():
 
 def get_all_xml_num():
     return len(os.listdir(xml_dir))
+
+
+def add_error_img(img_name):
+    jpg_list.append(img_name)
+
+
+def add_error_xml(xml_name):
+    xml_list.append(xml_name)
+
+
+if __name__ == '__main__':
+    check()
