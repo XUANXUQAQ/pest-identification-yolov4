@@ -11,6 +11,7 @@ import VOCdevkit.VOC2007.voc2yolo4 as voc2yolo4
 import get_dr_txt
 import get_gt_txt
 import get_map
+import kmeans_for_anchors
 import predict
 import train
 import utils.sha1_utils as sha1
@@ -148,6 +149,7 @@ def start_train():
     def trainFunc(*args, **kwargs):
         voc2yolo4.voc2Yolo4()
         voc_annotation.gen_annotation()
+        kmeans_for_anchors.get_anchors()
         train.start_train()
 
     try:

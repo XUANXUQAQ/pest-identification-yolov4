@@ -83,7 +83,7 @@ def load_data(path):
     return np.array(data)
 
 
-if __name__ == '__main__':
+def get_anchors():
     # 运行该程序会计算'./VOCdevkit/VOC2007/Annotations'的xml
     # 会生成yolo_anchors.txt
     SIZE = 416
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     print('acc:{:.2f}%'.format(avg_iou(data, out) * 100))
     print(out * SIZE)
     data = out * SIZE
-    f = open("model_data/yolo_anchors_new.txt", 'w')
+    f = open("model_data/yolo_anchors.txt", 'w')
     row = np.shape(data)[0]
     for i in range(row):
         if i == 0:
