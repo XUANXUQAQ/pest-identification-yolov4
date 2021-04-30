@@ -218,6 +218,16 @@ class YOLO(object):
             if count is not None:
                 count += 1
                 statistics[predicted_class] = count
+
+            keys_to_remove = []
+            # 去掉零
+            for each_key in statistics.keys():
+                if statistics[each_key] == 0:
+                    keys_to_remove.append(each_key)
+
+            for each_key in keys_to_remove:
+                del statistics[each_key]
+
             # 画框框
             label = '{} {:.2f}'.format(predicted_class, score)
             draw = ImageDraw.Draw(image)
