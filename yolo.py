@@ -25,7 +25,7 @@ class YOLO(object):
         "model_path": 'model_data/yolo4_weights.pth',
         "anchors_path": 'model_data/yolo_anchors.txt',
         "classes_path": 'model_data/all_classes.txt',
-        "model_image_size": (416, 416, 3),
+        "model_image_size": (608, 608, 3),
         "confidence": 0.5,
         "iou": 0.3,
         "cuda": True,
@@ -219,15 +219,6 @@ class YOLO(object):
                 count += 1
                 statistics[predicted_class] = count
 
-            keys_to_remove = []
-            # 去掉零
-            for each_key in statistics.keys():
-                if statistics[each_key] == 0:
-                    keys_to_remove.append(each_key)
-
-            for each_key in keys_to_remove:
-                del statistics[each_key]
-
             # 画框框
             label = '{} {:.2f}'.format(predicted_class, score)
             draw = ImageDraw.Draw(image)
@@ -249,4 +240,12 @@ class YOLO(object):
                 fill=self.colors[self.class_names.index(predicted_class)])
             draw.text(text_origin, str(label, 'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
+        keys_to_remove = []
+        # 去掉零
+        for each_key in statistics.keys():
+            if statistics[each_key] == 0:
+                keys_to_remove.append(each_key)
+
+        for each_key in keys_to_remove:
+            del statistics[each_key]
         return statistics, image
