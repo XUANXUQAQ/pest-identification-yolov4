@@ -141,3 +141,7 @@ def get_dr_txt():
         yolo.detect_image(image_id, image)
 
     print("Conversion completed!")
+
+
+if __name__ == '__main__':
+    get_dr_txt()

@@ -29,7 +29,6 @@ def predict_img(image_path):
         r_image.save(processed_name)
         return classes_statistics
     except Exception as e:
-        print('Open File Error!')
         print(e)
         return {"error": "Open File Error!"}
 
@@ -40,5 +39,5 @@ def update_model():
 
 
 if __name__ == '__main__':
-    statistics = predict_img(r'D:\System Folders\Pictures\Saved Pictures\3.jpg')
+    statistics = predict_img(r'img/0a8cb0131b4bb8a8e76be2d89f179924.jpg')
     print(statistics)

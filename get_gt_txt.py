@@ -63,3 +63,7 @@ def get_gt_txt():
                     new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
 
     print("Conversion completed!")
+
+
+if __name__ == '__main__':
+    get_gt_txt()
