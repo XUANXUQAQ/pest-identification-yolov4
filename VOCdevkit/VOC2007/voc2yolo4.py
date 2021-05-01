@@ -23,6 +23,7 @@ trainval_percent = 1
 
 
 def voc2Yolo4():
+    global trainval_percent
     xmlfilepath = r'Annotations'
     saveBasePath = r"ImageSets/Main"
     train_percent = 1
@@ -72,3 +73,7 @@ def voc2Yolo4():
 def update_train_percent(train_percent):
     global trainval_percent
     trainval_percent = train_percent
+
+
+if __name__ == '__main__':
+    voc2Yolo4()

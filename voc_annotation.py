@@ -48,3 +48,7 @@ def gen_annotation():
             convert_annotation(year, image_id, list_file)
             list_file.write('\n')
         list_file.close()
+
+
+if __name__ == '__main__':
+    gen_annotation()
