@@ -43,6 +43,11 @@ def is_xml_has_jpg():
                 jpg_tmp = os.path.join(jpeg_dir, each_file)
                 shutil.copy(jpg_tmp, os.path.join(backup_jpg_dir, each_file))
                 os.remove(jpg_tmp)
+        else:
+            print("suffix error:" + each_file)
+            jpg_tmp = os.path.join(jpeg_dir, each_file)
+            shutil.copy(jpg_tmp, os.path.join(backup_jpg_dir, each_file))
+            os.remove(jpg_tmp)
 
 
 def is_jpg_has_xml():
