@@ -32,6 +32,19 @@ def is_valid_jpg(jpg_file):
         return buf == b'\xff\xd9'  # 判定jpg是否包含结束字段
 
 
+def is_xml_has_jpg():
+    for each_file in os.listdir(jpeg_dir):
+        portion = os.path.splitext(each_file)
+        if portion[1].lower() == '.jpg':
+            file_name = portion[0] + '.xml'
+            full_xml_path = os.path.join(xml_dir, file_name)
+            if not os.path.exists(full_xml_path):
+                print('jpg file: ' + each_file + ' does not have xml: ' + full_xml_path)
+                jpg_tmp = os.path.join(jpeg_dir, each_file)
+                shutil.copy(jpg_tmp, os.path.join(backup_jpg_dir, each_file))
+                os.remove(jpg_tmp)
+
+
 def is_jpg_has_xml():
     global available_data_num
     available_data_num = 0
@@ -92,6 +105,7 @@ def check():
     print('\n incomplete file : %d' % incompleteFile)
 
     is_jpg_has_xml()
+    is_xml_has_jpg()
 
 
 def get_xml_list():
