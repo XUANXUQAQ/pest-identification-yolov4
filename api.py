@@ -29,6 +29,8 @@ CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_DATA_NAME = "data.json"
 
 pictures = []
+if not os.path.exists('cache'):
+    os.mkdir('cache')
 index_count = len(os.listdir('cache'))
 MAX_INDEX_NUM = 10000
 
@@ -297,6 +299,7 @@ def start_predict():
     :return:
     """
     ret = {}
+    each_statistics: dict
     if not pictures:
         return resp_utils.error('还未上传文件')
     for each in pictures:
@@ -304,7 +307,7 @@ def start_predict():
         if not each_statistics:
             each_statistics = predict.predict_img(each)
             ret[os.path.basename(each)] = each_statistics
-            if not each_statistics["error"]:
+            if 'error' not in each_statistics:
                 save_index(each, each_statistics)
         else:
             ret[os.path.basename(each)] = each_statistics

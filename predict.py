@@ -19,7 +19,7 @@ yolo = YOLO()
 
 
 # noinspection PyBroadException
-def predict_img(image_path):
+def predict_img(image_path) -> dict:
     try:
         parent_path = os.path.dirname(image_path)
         image_name = os.path.basename(image_path)
@@ -30,7 +30,7 @@ def predict_img(image_path):
         return classes_statistics
     except Exception as e:
         print(e)
-        return {"error": "Open File Error!"}
+        return {"error": ""}
 
 
 def update_model():
@@ -39,5 +39,5 @@ def update_model():
 
 
 if __name__ == '__main__':
-    statistics = predict_img(r'img/0a8cb0131b4bb8a8e76be2d89f179924.jpg')
+    statistics = predict_img(r'img/test.jpg')
     print(statistics)

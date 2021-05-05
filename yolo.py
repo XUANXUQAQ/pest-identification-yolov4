@@ -26,7 +26,7 @@ class YOLO(object):
         "anchors_path": 'model_data/yolo_anchors.txt',
         "classes_path": 'model_data/all_classes.txt',
         "model_image_size": (608, 608, 3),
-        "confidence": 0.01,
+        "confidence": 0.5,
         "iou": 0.5,
         "cuda": True,
         # ---------------------------------------------------------------------#
@@ -162,7 +162,7 @@ class YOLO(object):
                 batch_detections = batch_detections[0].cpu().numpy()
             except Exception as e:
                 print(e)
-                return "error", image
+                return {'error': ''}, image
 
             # ---------------------------------------------------------#
             #   对预测框进行得分筛选
