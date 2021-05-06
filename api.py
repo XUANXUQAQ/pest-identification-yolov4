@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import shutil
@@ -282,10 +283,14 @@ def api_upload():
     file_dir = os.path.join(file_dir, ip.replace(".", '_'))
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
-    f = request.files['file']
-    if f and allowed_files(f.filename):
-        path = os.path.join(file_dir, f.filename)
-        f.save(path)
+    jsonData = request.json
+    imgBase64 = jsonData['file']
+    fileName = jsonData['name']
+    f = base64.b64decode(imgBase64)
+    if f and allowed_files(fileName):
+        path = os.path.join(file_dir, fileName)
+        with open(path, 'wb') as file:
+            file.write(f)
         pictures.append(path)
         return resp_utils.success()
     else:
