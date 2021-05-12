@@ -62,18 +62,18 @@ def is_jpg_has_xml():
             jpg_file_in_xml = tree.find('filename')
             full_path_in_xml = os.path.join(jpeg_dir, jpg_file_in_xml.text)
             full_path_by_xml_name = os.path.join(jpeg_dir, portion[0] + '.jpg')
-            if not os.path.exists(full_path_in_xml):
-                if not os.path.exists(full_path_by_xml_name):
+            if not os.path.exists(full_path_by_xml_name):
+                if not os.path.exists(full_path_in_xml):
                     print('neither ' + full_path_in_xml + ' nor ' + full_path_by_xml_name + ' exist')
                     origin = os.path.join(xml_dir, each_file)
                     shutil.copy(origin, os.path.join(backup_xml_dir, each_file))
                     os.remove(os.path.join(xml_dir, each_file))
                     xml_list.append(each_file)
                 else:
+                    # 给图片改名，改为xml名字
+                    os.rename(full_path_in_xml, full_path_by_xml_name)
                     available_data_num += 1
             else:
-                # 给图片改名，改为xml名字
-                os.rename(full_path_in_xml, full_path_by_xml_name)
                 available_data_num += 1
         else:
             xml_list.append(each_file)
