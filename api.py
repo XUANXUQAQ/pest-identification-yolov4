@@ -49,7 +49,7 @@ def allowed_files(filename, suffix=None):
         return False
 
 
-def save_index(img_path, statistics) -> bool:
+def save_index(img_path, processed_img_base64, statistics) -> bool:
     if index_count > MAX_INDEX_NUM:
         print("缓存大小超出限制")
         return False
@@ -59,7 +59,8 @@ def save_index(img_path, statistics) -> bool:
     file_dir = os.path.join(CACHE_DIR, sha1_str)
     if not os.path.exists(file_dir):
         os.mkdir(file_dir)
-    json_file = json.dumps(statistics)
+    data = {'statistics': statistics, 'img': processed_img_base64}
+    json_file = json.dumps(data)
     try:
         with open(os.path.join(file_dir, CACHE_DATA_NAME), "wb") as f:
             f.write(json_file.encode("utf-8"))
@@ -308,14 +309,16 @@ def start_predict():
     if not pictures:
         return resp_utils.error('还未上传文件')
     for each in pictures:
-        each_statistics = load_index(each)
-        if not each_statistics:
-            each_statistics = predict.predict_img(each)
-            ret[os.path.basename(each)] = each_statistics
+        info = load_index(each)
+        if not info:
+            each_statistics, base64_str = predict.predict_img(each)
+            ret[os.path.basename(each)] = {'statistics': each_statistics, 'img': base64_str}
             if 'error' not in each_statistics:
-                save_index(each, each_statistics)
+                save_index(each, base64_str, each_statistics)
         else:
-            ret[os.path.basename(each)] = each_statistics
+            each_statistics = info['statistics']
+            base64_str = info['img']
+            ret[os.path.basename(each)] = {'statistics': each_statistics, 'img': base64_str}
     pictures.clear()
     return resp_utils.success(ret)
 
@@ -371,5 +374,3 @@ def get_available_data_num():
     })
 
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8899, debug=True)
