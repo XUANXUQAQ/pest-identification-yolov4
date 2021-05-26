@@ -21,7 +21,7 @@ def gen_annotation():
         root = tree.getroot()
 
         for obj in root.iter('object'):
-            list_file.write(' ' + str(classes[obj.find('name').text]))
+            list_file.write(' ' + str(classes[obj.find('name').text.replace('\n', '')]))
             break
 
     wd = getcwd()
