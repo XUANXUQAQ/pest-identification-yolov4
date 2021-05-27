@@ -28,7 +28,7 @@ def gen_annotation():
             if obj.find('difficult') is not None:
                 difficult = obj.find('difficult').text
 
-            cls = obj.find('name').text
+            cls = obj.find('name').text.strip()
             if cls not in classes or int(difficult) == 1:
                 continue
             cls_id = classes.index(cls)
