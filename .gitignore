@@ -155,3 +155,5 @@ VOCdevkit/VOC2007/ImageSets
 backup/
 /VOCdevkit/VOC2007/训练集.tar.gz
 img/
+
+*.bak

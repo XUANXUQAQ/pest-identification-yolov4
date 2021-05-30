@@ -35,7 +35,11 @@ def voc2Yolo4():
     if not os.path.exists(saveBasePath):
         os.makedirs(saveBasePath)
 
-    temp_xml = os.listdir(os.path.join(father_path, xmlfilepath))
+    xml_path = os.path.join(father_path, xmlfilepath)
+    if not os.path.exists(xml_path):
+        os.makedirs(xml_path)
+
+    temp_xml = os.listdir(xml_path)
     total_xml = []
     for xml in temp_xml:
         if xml.endswith(".xml"):

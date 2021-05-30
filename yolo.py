@@ -84,11 +84,12 @@ class YOLO(object):
         # ---------------------------------------------------#
         #   载入yolov4模型的权重
         # ---------------------------------------------------#
-        print('Loading weights into state dict...')
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        state_dict = torch.load(self.model_path, map_location=device)
-        self.net.load_state_dict(state_dict)
-        print('Finished!')
+        if os.path.exists(self.model_path):
+            print('Loading weights into state dict...')
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            state_dict = torch.load(self.model_path, map_location=device)
+            self.net.load_state_dict(state_dict)
+            print('Finished!')
 
         if self.cuda:
             os.environ["CUDA_VISIBLE_DEVICES"] = '0'
