@@ -148,19 +148,20 @@ def get_total_loss():
         return resp_utils.error('服务器出现错误')
 
 
+def __train_func(*args, **kwargs):
+    voc2yolo4.voc2Yolo4()
+    voc_annotation.gen_annotation()
+    kmeans_for_anchors.get_anchors()
+    train.start_train()
+
+
 @app.route('/train', methods=['POST'])
 def start_train():
-    def trainFunc(*args, **kwargs):
-        voc2yolo4.voc2Yolo4()
-        voc_annotation.gen_annotation()
-        kmeans_for_anchors.get_anchors()
-        train.start_train()
-
     try:
         global train_proc, is_thread_starting
         if (train_proc is None) or (not train_proc.is_alive()):
             is_thread_starting = True
-            train_proc = process_utils.CustomProcess(name='train', function=trainFunc)
+            train_proc = process_utils.CustomProcess(name='train', function=__train_func)
             train_proc.start()
             is_thread_starting = False
             return resp_utils.success()
