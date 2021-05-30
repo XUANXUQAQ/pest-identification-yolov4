@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-import threading
+from multiprocessing import Process
 
 exitFlag = 0
 
 
-class Thread(threading.Thread):  # 继承父类threading.Thread
+class CustomProcess(Process):  # 继承父类threading.Thread
     def __init__(self, name, function, **kwargs):
-        threading.Thread.__init__(self)
+        super(CustomProcess, self).__init__()
         self.name = name
         self.function = function
         self.args = kwargs

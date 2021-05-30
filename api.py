@@ -17,7 +17,7 @@ import predict
 import train
 import utils.sha1_utils as sha1
 import voc_annotation
-from utils import resp_utils, thread_utils
+from utils import resp_utils, process_utils
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -35,7 +35,7 @@ if not os.path.exists('cache'):
 index_count = len(os.listdir('cache'))
 MAX_INDEX_NUM = 10000
 
-train_thread = None
+train_proc = None
 is_thread_starting = False
 
 
@@ -135,8 +135,8 @@ def stop_train():
 @app.route('/loss', methods=['GET'])
 def get_total_loss():
     try:
-        global train_thread, is_thread_starting
-        if (train_thread is None) or (not train_thread.is_alive()) and not is_thread_starting:
+        global train_proc, is_thread_starting
+        if (train_proc is None) or (not train_proc.is_alive()) and not is_thread_starting:
             return resp_utils.error('深度学习意外停止')
         else:
             return resp_utils.success({
@@ -157,11 +157,11 @@ def start_train():
         train.start_train()
 
     try:
-        global train_thread, is_thread_starting
-        if (train_thread is None) or (not train_thread.is_alive()):
+        global train_proc, is_thread_starting
+        if (train_proc is None) or (not train_proc.is_alive()):
             is_thread_starting = True
-            train_thread = thread_utils.Thread(name='train', function=trainFunc)
-            train_thread.start()
+            train_proc = process_utils.CustomProcess(name='train', function=trainFunc)
+            train_proc.start()
             is_thread_starting = False
             return resp_utils.success()
         else:
