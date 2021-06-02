@@ -10,7 +10,7 @@ import sys
 import numpy as np
 
 
-def get_map():
+def get_map(is_visualize=False):
     """
     用于计算mAP
     代码克隆自https://github.com/Cartucho/mAP
@@ -76,6 +76,10 @@ def get_map():
         except ImportError:
             print("\"matplotlib\" not found, please install it to get the resulting plots.")
             args.no_plot = True
+
+    if not is_visualize:
+        draw_plot = False
+        show_animation = False
 
     def log_average_miss_rate(precision, fp_cumsum, num_images):
         """
