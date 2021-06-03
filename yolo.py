@@ -1,6 +1,3 @@
-# -------------------------------------#
-#       创建YOLO类
-# -------------------------------------#
 import colorsys
 import os
 
@@ -14,12 +11,6 @@ from utils.utils import (DecodeBox, letterbox_image,
                          non_max_suppression, yolo_correct_boxes)
 
 
-# --------------------------------------------#
-#   使用自己训练好的模型预测需要修改2个参数
-#   model_path和classes_path都需要修改！
-#   如果出现shape不匹配，一定要注意
-#   训练时的model_path和classes_path参数的修改
-# --------------------------------------------#
 class YOLO(object):
     _defaults = {
         "model_path": 'model_data/yolo4_weights.pth',
@@ -29,10 +20,6 @@ class YOLO(object):
         "confidence": 0.5,
         "iou": 0.5,
         "cuda": True,
-        # ---------------------------------------------------------------------#
-        #   该变量用于控制是否使用letterbox_image对输入图像进行不失真的resize，
-        #   在多次测试后，发现关闭letterbox_image直接resize的效果更好
-        # ---------------------------------------------------------------------#
         "letterbox_image": False,
     }
 
@@ -43,18 +30,13 @@ class YOLO(object):
         else:
             return "Unrecognized attribute name '" + n + "'"
 
-    # ---------------------------------------------------#
-    #   初始化YOLO
-    # ---------------------------------------------------#
     def __init__(self, **kwargs):
         self.__dict__.update(self._defaults)
         self.class_names = self._get_class()
         self.anchors = self._get_anchors()
         self.generate()
 
-    # ---------------------------------------------------#
     #   获得所有的分类
-    # ---------------------------------------------------#
     def _get_class(self):
         classes_path = os.path.expanduser(self.classes_path)
         with open(classes_path) as f:
@@ -62,9 +44,7 @@ class YOLO(object):
         class_names = [c.strip() for c in class_names]
         return class_names
 
-    # ---------------------------------------------------#
     #   获得所有的先验框
-    # ---------------------------------------------------#
     def _get_anchors(self):
         anchors_path = os.path.expanduser(self.anchors_path)
         with open(anchors_path) as f:
@@ -72,18 +52,10 @@ class YOLO(object):
         anchors = [float(x) for x in anchors.split(',')]
         return np.array(anchors).reshape([-1, 3, 2])[::-1, :, :]
 
-    # ---------------------------------------------------#
     #   生成模型
-    # ---------------------------------------------------#
     def generate(self):
-        # ---------------------------------------------------#
-        #   建立yolov4模型
-        # ---------------------------------------------------#
         self.net = YoloBody(len(self.anchors[0]), len(self.class_names)).eval()
 
-        # ---------------------------------------------------#
-        #   载入yolov4模型的权重
-        # ---------------------------------------------------#
         if os.path.exists(self.model_path):
             print('Loading weights into state dict...')
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -96,9 +68,6 @@ class YOLO(object):
             self.net = nn.DataParallel(self.net)
             self.net = self.net.cuda()
 
-        # ---------------------------------------------------#
-        #   建立三个特征层解码用的工具
-        # ---------------------------------------------------#
         self.yolo_decodes = []
         for i in range(3):
             self.yolo_decodes.append(
@@ -113,16 +82,10 @@ class YOLO(object):
             map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)),
                 self.colors))
 
-    # ---------------------------------------------------#
-    #   检测图片
-    # ---------------------------------------------------#
+    # 检测图片
     def detect_image(self, image):
         image_shape = np.array(np.shape(image)[0:2])
 
-        # ---------------------------------------------------------#
-        #   给图像增加灰条，实现不失真的resize
-        #   也可以直接resize进行识别
-        # ---------------------------------------------------------#
         if self.letterbox_image:
             crop_img = np.array(letterbox_image(image, (self.model_image_size[1], self.model_image_size[0])))
         else:
@@ -130,9 +93,6 @@ class YOLO(object):
             crop_img = crop_img.resize((self.model_image_size[1], self.model_image_size[0]), Image.BICUBIC)
         photo = np.array(crop_img, dtype=np.float32) / 255.0
         photo = np.transpose(photo, (2, 0, 1))
-        # ---------------------------------------------------------#
-        #   添加上batch_size维度
-        # ---------------------------------------------------------#
         images = [photo]
 
         with torch.no_grad():
@@ -140,34 +100,22 @@ class YOLO(object):
             if self.cuda:
                 images = images.cuda()
 
-            # ---------------------------------------------------------#
-            #   将图像输入网络当中进行预测！
-            # ---------------------------------------------------------#
             outputs = self.net(images)
             output_list = []
             for i in range(3):
                 output_list.append(self.yolo_decodes[i](outputs[i]))
 
-            # ---------------------------------------------------------#
-            #   将预测框进行堆叠，然后进行非极大抑制
-            # ---------------------------------------------------------#
             output = torch.cat(output_list, 1)
             batch_detections = non_max_suppression(output, len(self.class_names),
                                                    conf_thres=self.confidence,
                                                    nms_thres=self.iou)
 
-            # ---------------------------------------------------------#
-            #   如果没有检测出物体，返回原图
-            # ---------------------------------------------------------#
             try:
                 batch_detections = batch_detections[0].cpu().numpy()
             except Exception as e:
                 print(e)
                 return {'error': ''}, image
 
-            # ---------------------------------------------------------#
-            #   对预测框进行得分筛选
-            # ---------------------------------------------------------#
             top_index = batch_detections[:, 4] * batch_detections[:, 5] > self.confidence
             top_conf = batch_detections[top_index, 4] * batch_detections[top_index, 5]
             top_label = np.array(batch_detections[top_index, -1], np.int32)
@@ -175,11 +123,6 @@ class YOLO(object):
             top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(top_bboxes[:, 0], -1), np.expand_dims(
                 top_bboxes[:, 1], -1), np.expand_dims(top_bboxes[:, 2], -1), np.expand_dims(top_bboxes[:, 3], -1)
 
-            # -----------------------------------------------------------------#
-            #   在图像传入网络预测前会进行letterbox_image给图像周围添加灰条
-            #   因此生成的top_bboxes是相对于有灰条的图像的
-            #   我们需要对其进行修改，去除灰条的部分。
-            # -----------------------------------------------------------------#
             if self.letterbox_image:
                 boxes = yolo_correct_boxes(top_ymin, top_xmin, top_ymax, top_xmax,
                                            np.array([self.model_image_size[0], self.model_image_size[1]]), image_shape)

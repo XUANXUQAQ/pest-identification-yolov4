@@ -11,11 +11,6 @@ import numpy as np
 
 
 def get_map(is_visualize=False):
-    """
-    用于计算mAP
-    代码克隆自https://github.com/Cartucho/mAP
-    如果想要设定mAP0.x，比如计算mAP0.75，可以设定MINOVERLAP = 0.75。
-    """
     MINOVERLAP = 0.5
 
     parser = argparse.ArgumentParser()
@@ -25,18 +20,6 @@ def get_map(is_visualize=False):
     parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list of classes.")
     parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
     args = parser.parse_args()
-
-    '''
-        0,0 ------> x (width)
-         |
-         |  (Left,Top)
-         |      *_________
-         |      |         |
-                |         |
-         y      |_________|
-      (height)            *
-                    (Right,Bottom)
-    '''
 
     if args.ignore is None:
         args.ignore = []
@@ -82,22 +65,6 @@ def get_map(is_visualize=False):
         show_animation = False
 
     def log_average_miss_rate(precision, fp_cumsum, num_images):
-        """
-            log-average miss rate:
-                Calculated by averaging miss rates at 9 evenly spaced FPPI points
-                between 10e-2 and 10e0, in log-space.
-
-            output:
-                    lamr | log-average miss rate
-                    mr | miss rate
-                    fppi | false positives per image
-
-            references:
-                [1] Dollar, Piotr, et al. "Pedestrian Detection: An Evaluation of the
-                   State of the Art." Pattern Analysis and Machine Intelligence, IEEE
-                   Transactions on 34.4 (2012): 743 - 761.
-        """
-
         if precision.size == 0:
             lamr = 0
             mr = 1
@@ -149,16 +116,6 @@ def get_map(is_visualize=False):
     """
 
     def voc_ap(rec, prec):
-        """
-        --- Official matlab code VOC2012---
-        mrec=[0 ; rec ; 1];
-        mpre=[0 ; prec ; 0];
-        for i=numel(mpre)-1:-1:1
-                mpre(i)=max(mpre(i),mpre(i+1));
-        end
-        i=find(mrec(2:end)~=mrec(1:end-1))+1;
-        ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-        """
         rec.insert(0, 0.0)  # insert 0.0 at begining of list
         rec.append(1.0)  # insert 1.0 at end of list
         mrec = rec[:]

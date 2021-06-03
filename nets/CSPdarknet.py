@@ -5,9 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# -------------------------------------------------#
-#   MISH激活函数
-# -------------------------------------------------#
+# MISH激活函数
 class Mish(nn.Module):
     def __init__(self):
         super(Mish, self).__init__()
@@ -16,10 +14,7 @@ class Mish(nn.Module):
         return x * torch.tanh(F.softplus(x))
 
 
-# ---------------------------------------------------#
-#   卷积块 -> 卷积 + 标准化 + 激活函数
-#   Conv2d + BatchNormalization + Mish
-# ---------------------------------------------------#
+# Conv2d + BatchNormalization + Mish
 class BasicConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1):
         super(BasicConv, self).__init__()
@@ -35,10 +30,7 @@ class BasicConv(nn.Module):
         return x
 
 
-# ---------------------------------------------------#
-#   CSPdarknet的结构块的组成部分
-#   内部堆叠的残差块
-# ---------------------------------------------------#
+# CSPdarknet
 class Resblock(nn.Module):
     def __init__(self, channels, hidden_channels=None):
         super(Resblock, self).__init__()
@@ -55,13 +47,7 @@ class Resblock(nn.Module):
         return x + self.block(x)
 
 
-# --------------------------------------------------------------------#
-#   CSPdarknet的结构块
-#   首先利用ZeroPadding2D和一个步长为2x2的卷积块进行高和宽的压缩
-#   然后建立一个大的残差边shortconv、这个大残差边绕过了很多的残差结构
-#   主干部分会对num_blocks进行循环，循环内部是残差结构。
-#   对于整个CSPdarknet的结构块，就是一个大残差块+内部多个小残差块
-# --------------------------------------------------------------------#
+# CSPdarknet的结构块
 class Resblock_body(nn.Module):
     def __init__(self, in_channels, out_channels, num_blocks, first):
         super(Resblock_body, self).__init__()
@@ -123,11 +109,7 @@ class Resblock_body(nn.Module):
         return x
 
 
-# ---------------------------------------------------#
-#   CSPdarknet53 的主体部分
-#   输入为一张416x416x3的图片
-#   输出为三个有效特征层
-# ---------------------------------------------------#
+# CSPdarknet53
 class CSPDarkNet(nn.Module):
     def __init__(self, layers):
         super(CSPDarkNet, self).__init__()

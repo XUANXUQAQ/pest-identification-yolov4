@@ -15,10 +15,7 @@ def conv2d(filter_in, filter_out, kernel_size, stride=1):
     ]))
 
 
-# ---------------------------------------------------#
-#   SPP结构，利用不同大小的池化核进行池化
-#   池化后堆叠
-# ---------------------------------------------------#
+# SPP结构
 class SpatialPyramidPooling(nn.Module):
     def __init__(self, pool_sizes=[5, 9, 13]):
         super(SpatialPyramidPooling, self).__init__()
@@ -32,9 +29,7 @@ class SpatialPyramidPooling(nn.Module):
         return features
 
 
-# ---------------------------------------------------#
-#   卷积 + 上采样
-# ---------------------------------------------------#
+# 卷积 + 上采样
 class Upsample(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(Upsample, self).__init__()
@@ -49,9 +44,7 @@ class Upsample(nn.Module):
         return x
 
 
-# ---------------------------------------------------#
-#   三次卷积块
-# ---------------------------------------------------#
+# 三次卷积块
 def make_three_conv(filters_list, in_filters):
     m = nn.Sequential(
         conv2d(in_filters, filters_list[0], 1),
@@ -61,9 +54,7 @@ def make_three_conv(filters_list, in_filters):
     return m
 
 
-# ---------------------------------------------------#
-#   五次卷积块
-# ---------------------------------------------------#
+# 五次卷积块
 def make_five_conv(filters_list, in_filters):
     m = nn.Sequential(
         conv2d(in_filters, filters_list[0], 1),
@@ -75,9 +66,7 @@ def make_five_conv(filters_list, in_filters):
     return m
 
 
-# ---------------------------------------------------#
-#   最后获得yolov4的输出
-# ---------------------------------------------------#
+# yolov4的输出
 def yolo_head(filters_list, in_filters):
     m = nn.Sequential(
         conv2d(in_filters, filters_list[0], 3),
@@ -86,9 +75,7 @@ def yolo_head(filters_list, in_filters):
     return m
 
 
-# ---------------------------------------------------#
-#   yolo_body
-# ---------------------------------------------------#
+# yolo_body
 class YoloBody(nn.Module):
     def __init__(self, num_anchors, num_classes):
         super(YoloBody, self).__init__()
