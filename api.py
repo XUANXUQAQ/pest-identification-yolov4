@@ -152,7 +152,10 @@ def get_total_loss():
             try:
                 loss = train_loss_queue.get_nowait()
                 iteration = train_loss_queue.get_nowait()
-            except Exception:
+                print("loss: " + loss)
+                print("iteration: " + iteration)
+            except Exception as ex:
+                print(ex)
                 loss = 100
                 iteration = 1
             return resp_utils.success({
@@ -165,7 +168,7 @@ def get_total_loss():
 
 
 def __train_func(*args, **kwargs):
-    q = args[0]
+    q = kwargs['queue']
     voc2yolo4.voc2Yolo4()
     voc_annotation.gen_annotation()
     kmeans_for_anchors.get_anchors()

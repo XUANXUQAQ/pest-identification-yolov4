@@ -14,4 +14,4 @@ class CustomProcess(Process):  # 继承父类threading.Thread
         self.queue = queue
 
     def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
-        self.function(self.queue)
+        self.function(queue=self.queue)
