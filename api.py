@@ -128,8 +128,12 @@ def test_accuracy():
 
 @app.route('/train', methods=['DELETE'])
 def stop_train():
-    train.stop_train()
-    return resp_utils.success()
+    if train_proc is not None:
+        train_proc.terminate()
+        train_proc.join()
+        return resp_utils.success()
+    else:
+        return resp_utils.error("已经停止")
 
 
 @app.route('/loss', methods=['GET'])
