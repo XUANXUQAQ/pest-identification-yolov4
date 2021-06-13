@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import shutil
 import zipfile
+from multiprocessing import Queue
 
 from flask import Flask, request
 from flask_cors import CORS
@@ -18,8 +19,7 @@ import predict
 import train
 import utils.sha1_utils as sha1
 import voc_annotation
-from utils import resp_utils, process_utils
-from multiprocessing import Queue
+from utils import resp_utils
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -154,8 +154,8 @@ def get_total_loss():
                 iteration = train_loss_queue.get_nowait()
                 print("loss: " + loss)
                 print("iteration: " + iteration)
-            except Exception as ex:
-                print(ex)
+            except:
+                print('从队列中获取信息失败')
                 loss = 100
                 iteration = 1
             return resp_utils.success({
@@ -167,8 +167,7 @@ def get_total_loss():
         return resp_utils.error('服务器出现错误')
 
 
-def __train_func(*args, **kwargs):
-    q = kwargs['queue']
+def __train_func(q):
     voc2yolo4.voc2Yolo4()
     voc_annotation.gen_annotation()
     kmeans_for_anchors.get_anchors()
@@ -181,7 +180,7 @@ def start_train():
         global train_proc, is_thread_starting
         if (train_proc is None) or (not train_proc.is_alive()):
             is_thread_starting = True
-            train_proc = process_utils.CustomProcess(name='train', queue=train_loss_queue, function=__train_func)
+            train_proc = multiprocessing.Process(target=__train_func, args=(train_loss_queue,))
             train_proc.start()
             is_thread_starting = False
             return resp_utils.success()
