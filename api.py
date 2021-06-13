@@ -1,5 +1,6 @@
 import base64
 import json
+import multiprocessing
 import os
 import shutil
 import zipfile
@@ -40,6 +41,8 @@ MAX_INDEX_NUM = 10000
 
 train_proc = None
 is_thread_starting = False
+
+multiprocessing.set_start_method('spawn')
 
 
 def allowed_files(filename, suffix=None):
