@@ -31,7 +31,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'}
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_DATA_NAME = "data.json"
 
-train_loss_queue = Queue(maxsize=50)
+train_loss_queue = None
 
 pictures = []
 if not os.path.exists('cache'):
@@ -150,11 +150,12 @@ def get_total_loss():
             return resp_utils.error('深度学习意外停止')
         else:
             try:
-                loss, iteration = train_loss_queue.get_nowait()
-                print("loss: " + loss)
-                print("iteration: " + iteration)
-            except:
+                loss, iteration = train_loss_queue.get()
+                print("loss: " + str(loss))
+                print("iteration: " + str(iteration))
+            except Exception as ex:
                 print('从队列中获取信息失败')
+                print(ex)
                 loss = 100
                 iteration = 1
             return resp_utils.success({
@@ -166,17 +167,18 @@ def get_total_loss():
         return resp_utils.error('服务器出现错误')
 
 
-def __train_func(*args):
+def __train_func(_train_loss_queue):
     voc2yolo4.voc2Yolo4()
     voc_annotation.gen_annotation()
     kmeans_for_anchors.get_anchors()
-    train.start_train(queue=args[0])
+    train.start_train(queue=_train_loss_queue)
 
 
 @app.route('/train', methods=['POST'])
 def start_train():
     try:
-        global train_proc, is_thread_starting
+        global train_proc, is_thread_starting, train_loss_queue
+        train_loss_queue = Queue()
         if (train_proc is None) or (not train_proc.is_alive()):
             is_thread_starting = True
             train_proc = multiprocessing.Process(target=__train_func, args=(train_loss_queue,))

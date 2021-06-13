@@ -65,7 +65,7 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
             if iteration >= epoch_size:
                 break
             if queue is not None:
-                queue.put(get_loss(), get_iteration())
+                queue.put((get_loss(), get_iteration()))
             images, targets = batch[0], batch[1]
             with torch.no_grad():
                 if cuda:
@@ -107,7 +107,7 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
             if iteration >= epoch_size_val:
                 break
             if queue is not None:
-                queue.put(get_loss(), get_iteration())
+                queue.put((get_loss(), get_iteration()))
             images_val, targets_val = batch[0], batch[1]
 
             with torch.no_grad():
