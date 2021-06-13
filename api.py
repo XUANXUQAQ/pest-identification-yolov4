@@ -18,6 +18,7 @@ import train
 import utils.sha1_utils as sha1
 import voc_annotation
 from utils import resp_utils, process_utils
+from multiprocessing import Queue
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -28,6 +29,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'}
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_DATA_NAME = "data.json"
+
+train_loss_queue = Queue()
 
 pictures = []
 if not os.path.exists('cache'):
@@ -143,9 +146,15 @@ def get_total_loss():
         if (train_proc is None) or (not train_proc.is_alive()) and not is_thread_starting:
             return resp_utils.error('深度学习意外停止')
         else:
+            try:
+                loss = train_loss_queue.get_nowait()
+                iteration = train_loss_queue.get_nowait()
+            except Exception:
+                loss = 100
+                iteration = 1
             return resp_utils.success({
-                'loss': train.get_loss(),
-                'iteration': train.get_iteration()
+                'loss': loss,
+                'iteration': iteration
             })
     except Exception as e:
         print(e)
@@ -153,10 +162,11 @@ def get_total_loss():
 
 
 def __train_func(*args, **kwargs):
+    q = args[0]
     voc2yolo4.voc2Yolo4()
     voc_annotation.gen_annotation()
     kmeans_for_anchors.get_anchors()
-    train.start_train()
+    train.start_train(queue=q)
 
 
 @app.route('/train', methods=['POST'])
@@ -165,7 +175,7 @@ def start_train():
         global train_proc, is_thread_starting
         if (train_proc is None) or (not train_proc.is_alive()):
             is_thread_starting = True
-            train_proc = process_utils.CustomProcess(name='train', function=__train_func)
+            train_proc = process_utils.CustomProcess(name='train', queue=train_loss_queue, function=__train_func)
             train_proc.start()
             is_thread_starting = False
             return resp_utils.success()

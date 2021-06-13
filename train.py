@@ -14,7 +14,6 @@ from utils.dataloader import YoloDataset, yolo_dataset_collate
 
 model: YoloBody
 optimizer: optim.Adam
-stop_train_flag = False
 total_loss = 0
 __total_loss = 100
 __iterationCount = 1
@@ -56,7 +55,7 @@ def get_lr(optimizer):
         return param_group['lr']
 
 
-def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genval, Epoch, cuda):
+def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genval, Epoch, cuda, queue=None):
     global total_loss, __iterationCount
     val_loss = 0
 
@@ -64,9 +63,10 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
     with tqdm(total=epoch_size, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3) as pbar:
         for iteration, batch in enumerate(gen):
             if iteration >= epoch_size:
-                if stop_train_flag:
-                    return
                 break
+            if queue is not None:
+                queue.put(get_loss())
+                queue.put(get_iteration())
             images, targets = batch[0], batch[1]
             with torch.no_grad():
                 if cuda:
@@ -106,9 +106,10 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
     with tqdm(total=epoch_size_val, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3) as pbar:
         for iteration, batch in enumerate(genval):
             if iteration >= epoch_size_val:
-                if stop_train_flag:
-                    return
                 break
+            if queue is not None:
+                queue.put(get_loss())
+                queue.put(get_iteration())
             images_val, targets_val = batch[0], batch[1]
 
             with torch.no_grad():
@@ -137,7 +138,7 @@ def fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, genv
     print('Saving state, iter:', str(epoch + 1))
     __iterationCount += 1
     log = 'Epoch:%d----Total loss:%.4f----Val loss:%.4f----file_name:Epoch%d.pth' % \
-          ((epoch + 1), total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1), ((epoch + 1) % 100))
+          ((epoch + 1), __total_loss / (epoch_size + 1), val_loss / (epoch_size_val + 1), ((epoch + 1) % 100))
     with open('logs/epoch-status.log', 'a', encoding='utf-8') as log_file:
         log_file.write(log)
         log_file.write('\n')
@@ -154,14 +155,8 @@ def get_iteration():
     return __iterationCount
 
 
-def stop_train():
-    global stop_train_flag
-    stop_train_flag = True
-
-
-def start_train():
-    global stop_train_flag, model, __iterationCount
-    stop_train_flag = False
+def start_train(queue=None):
+    global model, __iterationCount
     __iterationCount = 1
 
     # classes和anchor的路径
@@ -248,9 +243,8 @@ def start_train():
         param.requires_grad = False
 
     for epoch in range(Init_Epoch, Freeze_Epoch):
-        if stop_train_flag:
-            return
-        fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Freeze_Epoch, Cuda)
+        fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Freeze_Epoch, Cuda,
+                      queue=queue)
         lr_scheduler.step()
 
     # 解冻训练
@@ -284,9 +278,8 @@ def start_train():
         param.requires_grad = True
 
     for epoch in range(Freeze_Epoch, Unfreeze_Epoch):
-        if stop_train_flag:
-            return
-        fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Unfreeze_Epoch, Cuda)
+        fit_one_epoch(net, yolo_losses, epoch, epoch_size, epoch_size_val, gen, gen_val, Unfreeze_Epoch, Cuda,
+                      queue=queue)
         lr_scheduler.step()
 
 
