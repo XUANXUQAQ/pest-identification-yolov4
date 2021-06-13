@@ -42,7 +42,7 @@ MAX_INDEX_NUM = 10000
 train_proc = None
 is_thread_starting = False
 
-multiprocessing.set_start_method('spawn')
+multiprocessing.set_start_method('spawn', force=True)
 
 
 def allowed_files(filename, suffix=None):
