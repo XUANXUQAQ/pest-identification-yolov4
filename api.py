@@ -31,7 +31,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'JPG', 'PNG', 'gif', 'GIF'}
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_DATA_NAME = "data.json"
 
-train_loss_queue = Queue()
+train_loss_queue = Queue(maxsize=50)
 
 pictures = []
 if not os.path.exists('cache'):
@@ -150,8 +150,7 @@ def get_total_loss():
             return resp_utils.error('深度学习意外停止')
         else:
             try:
-                loss = train_loss_queue.get_nowait()
-                iteration = train_loss_queue.get_nowait()
+                loss, iteration = train_loss_queue.get_nowait()
                 print("loss: " + loss)
                 print("iteration: " + iteration)
             except:
@@ -167,11 +166,11 @@ def get_total_loss():
         return resp_utils.error('服务器出现错误')
 
 
-def __train_func(q):
+def __train_func(*args):
     voc2yolo4.voc2Yolo4()
     voc_annotation.gen_annotation()
     kmeans_for_anchors.get_anchors()
-    train.start_train(queue=q)
+    train.start_train(queue=args[0])
 
 
 @app.route('/train', methods=['POST'])
