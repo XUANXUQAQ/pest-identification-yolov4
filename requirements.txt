@@ -83,3 +83,12 @@ xz=5.2.5=h7b6447c_0
 zipp=3.4.1=pypi_0
 zlib=1.2.11=h7b6447c_3
 zstd=1.4.5=h9ceee32_0
+
+opencv-python~=4.5.2.52
+numpy~=1.20.2
+pillow~=8.2.0
+utils~=1.0.1
+torchvision~=0.9.1
+flask~=2.0.0
+torchsummary~=1.5.1
+tqdm~=4.60.0
